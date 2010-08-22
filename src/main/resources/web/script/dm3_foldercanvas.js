@@ -12,7 +12,7 @@ function dm3_foldercanvas() {
         get_plugin("dm3_topicmaps").create_topicmap(dir.name)
         //
         canvas.start_grid_positioning()
-        get_plugin("dm3_files").create_file_topics(dir)
+        get_plugin("dm3_files").create_file_topics(dir, true)
         canvas.stop_grid_positioning()
     }
 
