@@ -20,6 +20,11 @@
             <artifactId>deepamehta3-core</artifactId>
             <version>${core-version}</version>
         </dependency>
+        <dependency>
+            <groupId>de.deepamehta</groupId>
+            <artifactId>deepamehta3-topicmaps</artifactId>
+            <version>${topicmaps-version}</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -31,7 +36,7 @@
                 <configuration>
                     <instructions>
                         <Bundle-Activator>
-                            de.deepamehta.core.service.Plugin
+                            de.deepamehta.plugins.foldercanvas.FolderCanvasPlugin
                         </Bundle-Activator>
                     </instructions>
                 </configuration>

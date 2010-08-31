@@ -1,5 +1,7 @@
 function dm3_foldercanvas() {
 
+    var LOG_FOLDERCANVAS = false
+
     // ------------------------------------------------------------------------------------------------ Overriding Hooks
 
     this.process_files_drop = function(files) {
@@ -9,12 +11,72 @@ function dm3_foldercanvas() {
         }
         //
         var dir = files.get_directory(0)
-        get_plugin("dm3_topicmaps").create_topicmap(dir.name)
+        if (LOG_FOLDERCANVAS) log("Directory dropped: " + dir.path)
         //
+        var folder_topic = get_folder_topic(dir.path)
+        if (folder_topic) {
+            if (LOG_FOLDERCANVAS) log("..... Folder topic exists already (ID " + folder_topic.id + ")")
+            var topicmap_topic = get_topicmap_topic(folder_topic.id)
+            if (!topicmap_topic) {
+                create_folder_canvas(dir, folder_topic.id)
+            } else {
+                if (LOG_FOLDERCANVAS) log("..... Topicmap exists already (ID " + topicmap_topic.id + ") - Selecting")
+                get_plugin("dm3_topicmaps").select_topicmap(topicmap_topic.id)
+            }
+        } else {
+            folder_topic = create_folder_topic(dir)
+            if (LOG_FOLDERCANVAS) log("..... Folder topic created (ID " + folder_topic.id + ")")
+            create_folder_canvas(dir, folder_topic.id)
+        }
+    }
+
+    // ------------------------------------------------------------------------------------------------- Private Methods
+
+    /**
+     * Returns the folder topic for a given path, or null.
+     */
+    function get_folder_topic(path) {
+        return dmc.get_topic_by_property("de/deepamehta/core/property/Path", path)
+    }
+
+    /**
+     * Returns the topic map topic for a given folder, or undefined.
+     */
+    function get_topicmap_topic(folder_topic_id) {
+        var topicmap_topics = dmc.get_related_topics(folder_topic_id, ["de/deepamehta/core/topictype/Topicmap"],
+                                                                      ["FOLDER_CANVAS;INCOMING"])
+        if (topicmap_topics.length > 1) {
+            alert("WARNING (dm3_foldercanvas.get_topicmap_topic):\n\n" +
+                "More than one topic maps for folder " + folder_topic_id)
+        }
+        return topicmap_topics[0]
+    }
+
+    // ---
+
+    /**
+     * Creates a folder topic for a given directory.
+     */
+    function create_folder_topic(dir) {
+        return create_topic("de/deepamehta/core/topictype/Folder", {
+            "de/deepamehta/core/property/FolderName": filename(dir.path),
+            "de/deepamehta/core/property/Path": dir.path
+        })
+    }
+
+    /**
+     * Creates a "folder canvas" (a topicmap) and fills it with the items (file and folder topics) contained
+     * in the given directory. Relates the folder canvas to the underlying folder (a folder topic).
+     */
+    function create_folder_canvas(dir, folder_topic_id) {
+        // create topicmap
+        var topicmap_topic = get_plugin("dm3_topicmaps").create_topicmap(dir.name)
+        if (LOG_FOLDERCANVAS) log("..... Topicmap created (ID " + topicmap_topic.id + ")")
+        // relate to folder
+        create_relation("FOLDER_CANVAS", folder_topic_id, topicmap_topic.id)
+        // fill topicmap
         canvas.start_grid_positioning()
         get_plugin("dm3_files").create_file_topics(dir, true)
         canvas.stop_grid_positioning()
     }
-
-    // ------------------------------------------------------------------------------------------------- Private Methods
 }
