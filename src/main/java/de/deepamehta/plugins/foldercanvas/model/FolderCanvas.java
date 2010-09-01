@@ -5,11 +5,13 @@ import de.deepamehta.plugins.topicmaps.model.Topicmap;
 import de.deepamehta.core.model.RelatedTopic;
 import de.deepamehta.core.model.Relation;
 import de.deepamehta.core.model.Topic;
-import de.deepamehta.core.service.DeepaMehtaService;
+import de.deepamehta.core.service.CoreService;
 
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+
+import java.io.File;
 
 import static java.util.Arrays.asList;
 import java.util.ArrayList;
@@ -23,7 +25,7 @@ public class FolderCanvas extends Topicmap {
 
     // ---------------------------------------------------------------------------------------------------- Constructors
 
-    public FolderCanvas(long topicmapId, DeepaMehtaService dms) {
+    public FolderCanvas(long topicmapId, CoreService dms) {
         super(topicmapId, dms);
     }
 
@@ -31,8 +33,10 @@ public class FolderCanvas extends Topicmap {
 
     public void synchronize() {
         Topic folderTopic = getFolderTopic();
-        String path = (String) folderTopic.getProperty("de/deepamehta/core/property/Path");
-        // String path = (String) dms.getTopicProperty(fileTopicId, "de/deepamehta/core/property/Path");
+        String path = (String) dms.getTopicProperty(folderTopic.id, "de/deepamehta/core/property/Path");
+        for (File file : new File(path).listFiles()) {
+            file.getPath();
+        }
     }
 
     // ------------------------------------------------------------------------------------------------- Private Methods
@@ -50,5 +54,9 @@ public class FolderCanvas extends Topicmap {
         }
         //
         return relTopics.get(0).getTopic();
+    }
+
+    private boolean isContainedInTopicmap(File file) {
+        return false;
     }
 }
