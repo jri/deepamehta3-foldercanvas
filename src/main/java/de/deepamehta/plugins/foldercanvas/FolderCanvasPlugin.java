@@ -39,10 +39,14 @@ public class FolderCanvasPlugin extends Plugin {
             try {
                 topicmapId = (Integer) params.get("topicmap_id");
                 FolderCanvas folderCanvas = new FolderCanvas(topicmapId, dms);
-                folderCanvas.synchronize();
+                FolderCanvas.SyncStats stats = folderCanvas.synchronize();
                 //
                 JSONObject result = new JSONObject();
-                result.put("message", "OK");
+                result.put("status", "success");
+                result.put("files_added", stats.filesAdded);
+                result.put("folders_added", stats.foldersAdded);
+                result.put("files_removed", stats.filesRemoved);
+                result.put("folders_removed", stats.foldersRemoved);
                 return result;
             } catch (Throwable e) {
                 throw new RuntimeException("Error while synchronizing folder canvas " + topicmapId, e);

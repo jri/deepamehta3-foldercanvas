@@ -3,6 +3,7 @@ package de.deepamehta.plugins.foldercanvas.model;
 import de.deepamehta.plugins.files.FilesPlugin;
 import de.deepamehta.plugins.topicmaps.TopicmapsPlugin;
 import de.deepamehta.plugins.topicmaps.model.Topicmap;
+import de.deepamehta.plugins.topicmaps.model.TopicmapTopic;
 
 import de.deepamehta.core.model.RelatedTopic;
 import de.deepamehta.core.model.Relation;
@@ -23,6 +24,9 @@ import java.util.logging.Logger;
 
 
 
+/**
+ * A topicmap that is bound to a file system folder and that can synchronize with that folder.
+ */
 public class FolderCanvas extends Topicmap {
 
     // ---------------------------------------------------------------------------------------------- Instance Variables
@@ -40,35 +44,65 @@ public class FolderCanvas extends Topicmap {
 
     // -------------------------------------------------------------------------------------------------- Public Methods
 
-    public void synchronize() throws Exception {
+    public SyncStats synchronize() throws Exception {
         Topic folderTopic = getFolderTopic();
         String syncPath = (String) dms.getTopicProperty(folderTopic.id, "de/deepamehta/core/property/Path");
         SyncStats syncStats = new SyncStats();
-        for (File file : new File(syncPath).listFiles()) {
-            String path = file.getPath();
-            Topic topic = dms.getTopic("de/deepamehta/core/property/Path", path);
-            if (topic != null) {
-                if (!containsTopic(topic.id)) {
-                    topicmapsPlugin.addTopicToTopicmap(topic.id, 0, 0, topicmapId); // FIXME: positioning
-                    syncStats.countAsAdded(file);
-                }
-            } else {
-                if (file.isDirectory()) {
-                    topic = filesPlugin.createFolderTopic(path);
-                } else {
-                    topic = filesPlugin.createFileTopic(path);
-                }
-                topicmapsPlugin.addTopicToTopicmap(topic.id, 0, 0, topicmapId);     // FIXME: positioning
-                syncStats.countAsAdded(file);
-            }
+        // 1) scan fíles and possibly add file/folder topics to topicmap
+        File[] files = new File(syncPath).listFiles();
+        for (File file : files) {
+            syncFile(file, syncStats);
         }
-        // TODO: remove topics from map
-        logger.info("### Synchronization of " + syncPath + " with topicmap " + topicmapId + " complete =>\n" +
-            syncStats.filesAddedCount + " files added\n" +
-            syncStats.foldersAddedCount + " folders added");
+        // 2) iterate through topicmap and possibly remove file/folder topics
+        List fileList = asList(files);
+        for (TopicmapTopic topic : topics.values()) {
+            syncTopic(topic, fileList, syncStats);
+        }
+        //
+        logger.info("### Synchronization of \"" + syncPath + "\" with topicmap " + topicmapId + " complete =>\n" +
+            syncStats.filesAdded   + " files added\n"   + syncStats.foldersAdded   + " folders added\n" +
+            syncStats.filesRemoved + " files removed\n" + syncStats.foldersRemoved + " folders removed");
+        //
+        return syncStats;
     }
 
     // ------------------------------------------------------------------------------------------------- Private Methods
+
+    private void syncFile(File file, SyncStats syncStats) throws Exception {
+        String path = file.getPath();
+        Topic topic = dms.getTopic("de/deepamehta/core/property/Path", path);
+        if (topic != null) {
+            if (!containsTopic(topic.id)) {
+                topicmapsPlugin.addTopicToTopicmap(topic.id, 0, 0, topicmapId); // FIXME: positioning
+                syncStats.countAsAdded(file);
+            }
+        } else {
+            if (file.isDirectory()) {
+                topic = filesPlugin.createFolderTopic(path);
+            } else {
+                topic = filesPlugin.createFileTopic(path);  // throws Exception
+            }
+            topicmapsPlugin.addTopicToTopicmap(topic.id, 0, 0, topicmapId);     // FIXME: positioning
+            syncStats.countAsAdded(file);
+        }
+    }
+
+    private void syncTopic(Topic topic, List files, SyncStats syncStats) {
+        boolean isFile   = topic.typeUri.equals("de/deepamehta/core/topictype/File");
+        boolean isFolder = topic.typeUri.equals("de/deepamehta/core/topictype/Folder");
+        if (!isFile && !isFolder) {
+            return;
+        }
+        //
+        String path = (String) dms.getTopicProperty(topic.id, "de/deepamehta/core/property/Path");
+        File file = new File(path);
+        if (!files.contains(file)) {
+            dms.deleteTopic(topic.id);
+            syncStats.countAsRemoved(file, isFolder);
+        }
+    }
+
+    // ---
 
     private Topic getFolderTopic() {
         List<RelatedTopic> relTopics = dms.getRelatedTopics(topicmapId,
@@ -86,16 +120,31 @@ public class FolderCanvas extends Topicmap {
 
     // --------------------------------------------------------------------------------------------- Private Inner Class
 
-    private class SyncStats {
+    public class SyncStats {
 
-        int filesAddedCount = 0;
-        int foldersAddedCount = 0;
+        public int filesAdded = 0;
+        public int foldersAdded = 0;
+        public int filesRemoved = 0;
+        public int foldersRemoved = 0;
 
-        void countAsAdded(File file) {
+        private void countAsAdded(File file) {
             if (file.isDirectory()) {
-                foldersAddedCount++;
+                logger.info("# Adding folder: " + file);
+                foldersAdded++;
             } else {
-                filesAddedCount++;
+                logger.info("# Adding file: " + file);
+                filesAdded++;
+            }
+        }
+
+        private void countAsRemoved(File file, boolean isDirectory) {
+            // Note: the file doesn't exist anymore. We must rely on external info to detect directories.
+            if (isDirectory) {
+                logger.info("# Removing folder: " + file);
+                foldersRemoved++;
+            } else {
+                logger.info("# Removing file: " + file);
+                filesRemoved++;
             }
         }
     }
