@@ -14,6 +14,7 @@ import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
+import java.awt.Point;
 import java.io.File;
 
 import static java.util.Arrays.asList;
@@ -48,10 +49,11 @@ public class FolderCanvas extends Topicmap {
         Topic folderTopic = getFolderTopic();
         String syncPath = (String) dms.getTopicProperty(folderTopic.id, "de/deepamehta/core/property/Path");
         SyncStats syncStats = new SyncStats();
-        // 1) scan fíles and possibly add file/folder topics to topicmap
+        GridPositioning positioning = new Topicmap.GridPositioning(600, 0);
+        // 1) scan files and possibly add file/folder topics to topicmap
         File[] files = new File(syncPath).listFiles();
         for (File file : files) {
-            syncFile(file, syncStats);
+            syncFile(file, positioning, syncStats);
         }
         // 2) iterate through topicmap and possibly remove file/folder topics
         List fileList = asList(files);
@@ -66,23 +68,57 @@ public class FolderCanvas extends Topicmap {
         return syncStats;
     }
 
+    // -------------------------------------------------------------------------------------------- Public Inner Classes
+
+    public class SyncStats {
+
+        public int filesAdded = 0;
+        public int foldersAdded = 0;
+        public int filesRemoved = 0;
+        public int foldersRemoved = 0;
+
+        private void countAsAdded(File file) {
+            if (file.isDirectory()) {
+                logger.info("# Adding folder: " + file);
+                foldersAdded++;
+            } else {
+                logger.info("# Adding file: " + file);
+                filesAdded++;
+            }
+        }
+
+        private void countAsRemoved(File file, boolean isDirectory) {
+            // Note: the file doesn't exist anymore. We must rely on external info to detect directories.
+            if (isDirectory) {
+                logger.info("# Removing folder: " + file);
+                foldersRemoved++;
+            } else {
+                logger.info("# Removing file: " + file);
+                filesRemoved++;
+            }
+        }
+    }
+
     // ------------------------------------------------------------------------------------------------- Private Methods
 
-    private void syncFile(File file, SyncStats syncStats) throws Exception {
+    private void syncFile(File file, GridPositioning positioning, SyncStats syncStats) throws Exception {
         String path = file.getPath();
         Topic topic = dms.getTopic("de/deepamehta/core/property/Path", path);
+        boolean addToTopicmap;
         if (topic != null) {
-            if (!containsTopic(topic.id)) {
-                topicmapsPlugin.addTopicToTopicmap(topic.id, 0, 0, topicmapId); // FIXME: positioning
-                syncStats.countAsAdded(file);
-            }
+            addToTopicmap = !containsTopic(topic.id);
         } else {
             if (file.isDirectory()) {
                 topic = filesPlugin.createFolderTopic(path);
             } else {
                 topic = filesPlugin.createFileTopic(path);  // throws Exception
             }
-            topicmapsPlugin.addTopicToTopicmap(topic.id, 0, 0, topicmapId);     // FIXME: positioning
+            addToTopicmap = true;
+        }
+        //
+        if (addToTopicmap) {
+            Point pos = positioning.nextPosition();
+            topicmapsPlugin.addTopicToTopicmap(topic.id, pos.x, pos.y, topicmapId);
             syncStats.countAsAdded(file);
         }
     }
@@ -116,36 +152,5 @@ public class FolderCanvas extends Topicmap {
         }
         //
         return relTopics.get(0).getTopic();
-    }
-
-    // --------------------------------------------------------------------------------------------- Private Inner Class
-
-    public class SyncStats {
-
-        public int filesAdded = 0;
-        public int foldersAdded = 0;
-        public int filesRemoved = 0;
-        public int foldersRemoved = 0;
-
-        private void countAsAdded(File file) {
-            if (file.isDirectory()) {
-                logger.info("# Adding folder: " + file);
-                foldersAdded++;
-            } else {
-                logger.info("# Adding file: " + file);
-                filesAdded++;
-            }
-        }
-
-        private void countAsRemoved(File file, boolean isDirectory) {
-            // Note: the file doesn't exist anymore. We must rely on external info to detect directories.
-            if (isDirectory) {
-                logger.info("# Removing folder: " + file);
-                foldersRemoved++;
-            } else {
-                logger.info("# Removing file: " + file);
-                filesRemoved++;
-            }
-        }
     }
 }
