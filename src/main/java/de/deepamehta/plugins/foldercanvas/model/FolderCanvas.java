@@ -48,8 +48,11 @@ public class FolderCanvas extends Topicmap {
     public SyncStats synchronize() throws Exception {
         Topic folderTopic = getFolderTopic();
         String syncPath = (String) dms.getTopicProperty(folderTopic.id, "de/deepamehta/core/property/Path");
+        //
+        logger.info("### Starting synchronization of \"" + syncPath + "\" with topicmap " + topicmapId);
+        //
         SyncStats syncStats = new SyncStats();
-        GridPositioning positioning = new Topicmap.GridPositioning(600, 0);
+        GridPositioning positioning = new GridPositioning(600, 0);
         // 1) scan files and possibly add file/folder topics to topicmap
         File[] files = new File(syncPath).listFiles();
         for (File file : files) {
@@ -61,7 +64,7 @@ public class FolderCanvas extends Topicmap {
             syncTopic(topic, fileList, syncStats);
         }
         //
-        logger.info("### Synchronization of \"" + syncPath + "\" with topicmap " + topicmapId + " complete =>\n" +
+        logger.info("### Synchronization complete =>\n" +
             syncStats.filesAdded   + " files added\n"   + syncStats.foldersAdded   + " folders added\n" +
             syncStats.filesRemoved + " files removed\n" + syncStats.foldersRemoved + " folders removed");
         //
