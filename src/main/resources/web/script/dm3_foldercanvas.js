@@ -11,28 +11,29 @@ function dm3_foldercanvas() {
         }
         //
         var dir = files.get_directory(0)
-        if (LOG_FOLDERCANVAS) log("Directory dropped: " + dir.path)
+        if (LOG_FOLDERCANVAS) dm3c.log("Directory dropped: " + dir.path)
         //
         var folder_topic = get_folder_topic_for_path(dir.path)
         if (folder_topic) {
-            if (LOG_FOLDERCANVAS) log("..... Folder topic exists already (ID " + folder_topic.id + ")")
+            if (LOG_FOLDERCANVAS) dm3c.log("..... Folder topic exists already (ID " + folder_topic.id + ")")
             var topicmap_topic = get_topicmap_topic(folder_topic.id)
             if (!topicmap_topic) {
                 create_folder_canvas(dir, folder_topic.id)
             } else {
-                if (LOG_FOLDERCANVAS) log("..... Topicmap exists already (ID " + topicmap_topic.id + ") - Selecting")
-                get_plugin("dm3_topicmaps").select_topicmap(topicmap_topic.id)
+                if (LOG_FOLDERCANVAS) dm3c.log("..... Topicmap exists already (ID " + topicmap_topic.id + ")" +
+                    " - Selecting")
+                dm3c.get_plugin("dm3_topicmaps").select_topicmap(topicmap_topic.id)
             }
         } else {
             folder_topic = create_folder_topic(dir)
-            if (LOG_FOLDERCANVAS) log("..... Folder topic created (ID " + folder_topic.id + ")")
+            if (LOG_FOLDERCANVAS) dm3c.log("..... Folder topic created (ID " + folder_topic.id + ")")
             create_folder_canvas(dir, folder_topic.id)
         }
     }
 
     this.add_canvas_commands = function() {
         var commands = []
-        var topicmap_id = get_plugin("dm3_topicmaps").get_topicmap_id()
+        var topicmap_id = dm3c.get_plugin("dm3_topicmaps").get_topicmap_id()
         // provide sync-command only for folder canvases (not for regular topicmaps)
         if (get_folder_topic(topicmap_id)) {
             commands.push({
@@ -42,27 +43,27 @@ function dm3_foldercanvas() {
         return commands
 
         function do_synchronize() {
-            var result = dmc.execute_command("deepamehta3-foldercanvas.synchronize", {topicmap_id: topicmap_id})
-            get_plugin("dm3_topicmaps").refresh_topicmap(topicmap_id)
+            var result = dm3c.restc.execute_command("deepamehta3-foldercanvas.synchronize", {topicmap_id: topicmap_id})
+            dm3c.get_plugin("dm3_topicmaps").refresh_topicmap(topicmap_id)
             alert("Synchronization complete!\n\n" + JSON.stringify(result))
         }
     }
 
-    // ------------------------------------------------------------------------------------------------- Private Methods
+    // ----------------------------------------------------------------------------------------------- Private Functions
 
     /**
      * Returns the folder topic for a given path, or null.
      */
     function get_folder_topic_for_path(path) {
-        return dmc.get_topic_by_property("de/deepamehta/core/property/Path", path)
+        return dm3c.restc.get_topic_by_property("de/deepamehta/core/property/Path", path)
     }
 
     /**
      * Returns the topicmap topic for a given folder, or undefined.
      */
     function get_topicmap_topic(folder_topic_id) {
-        var topicmap_topics = dmc.get_related_topics(folder_topic_id, ["de/deepamehta/core/topictype/Topicmap"],
-                                                                      ["FOLDER_CANVAS;INCOMING"])
+        var topicmap_topics = dm3c.restc.get_related_topics(folder_topic_id, ["de/deepamehta/core/topictype/Topicmap"],
+                                                                             ["FOLDER_CANVAS;INCOMING"])
         if (topicmap_topics.length > 1) {
             alert("WARNING (dm3_foldercanvas.get_topicmap_topic):\n\n" +
                 "More than one topicmaps for folder " + folder_topic_id)
@@ -74,8 +75,8 @@ function dm3_foldercanvas() {
      * Returns the folder topic for a given topicmap, or undefined.
      */
     function get_folder_topic(topicmap_id) {
-        var folder_topics = dmc.get_related_topics(topicmap_id, ["de/deepamehta/core/topictype/Folder"],
-                                                                ["FOLDER_CANVAS;OUTGOING"])
+        var folder_topics = dm3c.restc.get_related_topics(topicmap_id, ["de/deepamehta/core/topictype/Folder"],
+                                                                       ["FOLDER_CANVAS;OUTGOING"])
         if (folder_topics.length > 1) {
             alert("WARNING (dm3_foldercanvas.get_folder_topic):\n\n" +
                 "More than one folder topics for topicmap " + topicmap_id)
@@ -89,8 +90,8 @@ function dm3_foldercanvas() {
      * Creates a folder topic for a given directory.
      */
     function create_folder_topic(dir) {
-        return create_topic("de/deepamehta/core/topictype/Folder", {
-            "de/deepamehta/core/property/FolderName": filename(dir.path),
+        return dm3c.create_topic("de/deepamehta/core/topictype/Folder", {
+            "de/deepamehta/core/property/FolderName": js.filename(dir.path),
             "de/deepamehta/core/property/Path": dir.path
         })
     }
@@ -101,13 +102,13 @@ function dm3_foldercanvas() {
      */
     function create_folder_canvas(dir, folder_topic_id) {
         // create topicmap
-        var topicmap_topic = get_plugin("dm3_topicmaps").create_topicmap(dir.name)
-        if (LOG_FOLDERCANVAS) log("..... Topicmap created (ID " + topicmap_topic.id + ")")
+        var topicmap_topic = dm3c.get_plugin("dm3_topicmaps").create_topicmap(dir.name)
+        if (LOG_FOLDERCANVAS) dm3c.log("..... Topicmap created (ID " + topicmap_topic.id + ")")
         // relate to folder
-        create_relation("FOLDER_CANVAS", folder_topic_id, topicmap_topic.id)
+        dm3c.create_relation("FOLDER_CANVAS", folder_topic_id, topicmap_topic.id)
         // fill topicmap
-        canvas.start_grid_positioning()
-        get_plugin("dm3_files").create_file_topics(dir, true)
-        canvas.stop_grid_positioning()
+        dm3c.canvas.start_grid_positioning()
+        dm3c.get_plugin("dm3_files").create_file_topics(dir, true)
+        dm3c.canvas.stop_grid_positioning()
     }
 }
