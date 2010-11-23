@@ -31,7 +31,7 @@ function dm3_foldercanvas() {
         }
     }
 
-    this.add_canvas_commands = function() {
+    this.add_canvas_commands = function(cx, cy) {
         var commands = []
         var topicmap_id = dm3c.get_plugin("dm3_topicmaps").get_topicmap_id()
         // provide sync-command only for folder canvases (not for regular topicmaps)
