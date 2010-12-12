@@ -1,4 +1,4 @@
-function dm3_foldercanvas() {
+function foldercanvas_plugin() {
 
     var LOG_FOLDERCANVAS = false
 
@@ -22,7 +22,7 @@ function dm3_foldercanvas() {
             } else {
                 if (LOG_FOLDERCANVAS) dm3c.log("..... Topicmap exists already (ID " + topicmap_topic.id + ")" +
                     " - Selecting")
-                dm3c.get_plugin("dm3_topicmaps").select_topicmap(topicmap_topic.id)
+                dm3c.get_plugin("topicmaps_plugin").select_topicmap(topicmap_topic.id)
             }
         } else {
             folder_topic = create_folder_topic(dir)
@@ -33,7 +33,7 @@ function dm3_foldercanvas() {
 
     this.add_canvas_commands = function(cx, cy) {
         var commands = []
-        var topicmap_id = dm3c.get_plugin("dm3_topicmaps").get_topicmap_id()
+        var topicmap_id = dm3c.get_plugin("topicmaps_plugin").get_topicmap_id()
         // provide sync-command only for folder canvases (not for regular topicmaps)
         if (get_folder_topic(topicmap_id)) {
             commands.push({
@@ -44,7 +44,7 @@ function dm3_foldercanvas() {
 
         function do_synchronize() {
             var result = dm3c.restc.execute_command("deepamehta3-foldercanvas.synchronize", {topicmap_id: topicmap_id})
-            dm3c.get_plugin("dm3_topicmaps").refresh_topicmap(topicmap_id)
+            dm3c.get_plugin("topicmaps_plugin").refresh_topicmap(topicmap_id)
             alert("Synchronization complete!\n\n" + JSON.stringify(result))
         }
     }
@@ -65,7 +65,7 @@ function dm3_foldercanvas() {
         var topicmap_topics = dm3c.restc.get_related_topics(folder_topic_id, ["de/deepamehta/core/topictype/Topicmap"],
                                                                              ["FOLDER_CANVAS;INCOMING"])
         if (topicmap_topics.length > 1) {
-            alert("WARNING (dm3_foldercanvas.get_topicmap_topic):\n\n" +
+            alert("WARNING (foldercanvas_plugin.get_topicmap_topic):\n\n" +
                 "More than one topicmaps for folder " + folder_topic_id)
         }
         return topicmap_topics[0]
@@ -78,7 +78,7 @@ function dm3_foldercanvas() {
         var folder_topics = dm3c.restc.get_related_topics(topicmap_id, ["de/deepamehta/core/topictype/Folder"],
                                                                        ["FOLDER_CANVAS;OUTGOING"])
         if (folder_topics.length > 1) {
-            alert("WARNING (dm3_foldercanvas.get_folder_topic):\n\n" +
+            alert("WARNING (foldercanvas_plugin.get_folder_topic):\n\n" +
                 "More than one folder topics for topicmap " + topicmap_id)
         }
         return folder_topics[0]
@@ -102,7 +102,7 @@ function dm3_foldercanvas() {
      */
     function create_folder_canvas(dir, folder_topic_id) {
         // create topicmap
-        var topicmap_topic = dm3c.get_plugin("dm3_topicmaps").create_topicmap(dir.name)
+        var topicmap_topic = dm3c.get_plugin("topicmaps_plugin").create_topicmap(dir.name)
         if (LOG_FOLDERCANVAS) dm3c.log("..... Topicmap created (ID " + topicmap_topic.id + ")")
         // relate to folder
         dm3c.create_relation("FOLDER_CANVAS", folder_topic_id, topicmap_topic.id)
