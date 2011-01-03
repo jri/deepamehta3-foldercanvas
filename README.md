@@ -24,7 +24,7 @@ Perform the installation via the Apache Felix shell (the terminal window that op
 
 2. Download and start the DeepaMehta 3 Folder Canvas plugin:
 
-        start http://www.deepamehta.de/maven2/de/deepamehta/deepamehta3-foldercanvas/0.4.2/deepamehta3-foldercanvas-0.4.2.jar
+        start http://www.deepamehta.de/maven2/de/deepamehta/deepamehta3-foldercanvas/0.4.3/deepamehta3-foldercanvas-0.4.3.jar
 
    When using the `lb` command again you should now see the DeepaMehta 3 Folder Canvas plugin as *Active* and the DeepaMehta 3 File Manager plugin as *Resolved*.
 
@@ -37,6 +37,10 @@ Note: the DeepaMehta 3 File Manager plugin and the DeepaMehta 3 Folder Canvas pl
 Version History
 ---------------
 
+**v0.4.3** -- Jan 3, 2011
+
+* Compatible with DeepaMehta 3 v0.4.4
+
 **v0.4.2** -- Nov 25, 2010
 
 * Compatible with DeepaMehta 3 v0.4.3
@@ -48,4 +52,4 @@ Version History
 
 ------------
 Jörg Richter  
-Nov 25, 2010
+Jan 3, 2011
