@@ -33,7 +33,7 @@ public class FolderCanvasPlugin extends Plugin {
 
 
     @Override
-    public JSONObject executeCommandHook(String command, Map params, Map<String, String> clientContext) {
+    public JSONObject executeCommandHook(String command, Map params, ClientContext clientContext) {
         if (command.equals("deepamehta3-foldercanvas.synchronize")) {
             long topicmapId = -1;
             try {
