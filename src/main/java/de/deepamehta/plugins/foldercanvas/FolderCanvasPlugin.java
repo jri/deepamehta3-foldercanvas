@@ -2,15 +2,13 @@ package de.deepamehta.plugins.foldercanvas;
 
 import de.deepamehta.plugins.foldercanvas.model.FolderCanvas;
 
-import de.deepamehta.core.model.Topic;
-import de.deepamehta.core.model.Relation;
+import de.deepamehta.core.model.ClientContext;
 import de.deepamehta.core.service.Plugin;
 
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
 
-import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
