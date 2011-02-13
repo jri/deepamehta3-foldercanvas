@@ -1,9 +1,9 @@
 package de.deepamehta.plugins.foldercanvas.model;
 
-import de.deepamehta.plugins.files.FilesPlugin;
-import de.deepamehta.plugins.topicmaps.TopicmapsPlugin;
+import de.deepamehta.plugins.files.service.FilesService;
 import de.deepamehta.plugins.topicmaps.model.Topicmap;
 import de.deepamehta.plugins.topicmaps.model.TopicmapTopic;
+import de.deepamehta.plugins.topicmaps.service.TopicmapsService;
 
 import de.deepamehta.core.model.RelatedTopic;
 import de.deepamehta.core.model.Relation;
@@ -32,15 +32,18 @@ public class FolderCanvas extends Topicmap {
 
     // ---------------------------------------------------------------------------------------------- Instance Variables
 
-    private TopicmapsPlugin topicmapsPlugin = (TopicmapsPlugin) dms.getPlugin("de.deepamehta.3-topicmaps");
-    private FilesPlugin filesPlugin         = (FilesPlugin)     dms.getPlugin("de.deepamehta.3-files");
+    private TopicmapsService topicmapsService;
+    private FilesService filesService;
 
     private Logger logger = Logger.getLogger(getClass().getName());
 
     // ---------------------------------------------------------------------------------------------------- Constructors
 
-    public FolderCanvas(long topicmapId, CoreService dms) {
+    public FolderCanvas(long topicmapId, CoreService dms, TopicmapsService topicmapsService,
+                                                          FilesService filesService) {
         super(topicmapId, dms);
+        this.topicmapsService = topicmapsService;
+        this.filesService = filesService;
     }
 
     // -------------------------------------------------------------------------------------------------- Public Methods
@@ -71,37 +74,6 @@ public class FolderCanvas extends Topicmap {
         return syncStats;
     }
 
-    // -------------------------------------------------------------------------------------------- Public Inner Classes
-
-    public class SyncStats {
-
-        public int filesAdded = 0;
-        public int foldersAdded = 0;
-        public int filesRemoved = 0;
-        public int foldersRemoved = 0;
-
-        private void countAsAdded(File file) {
-            if (file.isDirectory()) {
-                logger.info("# Adding folder: " + file);
-                foldersAdded++;
-            } else {
-                logger.info("# Adding file: " + file);
-                filesAdded++;
-            }
-        }
-
-        private void countAsRemoved(File file, boolean isDirectory) {
-            // Note: the file doesn't exist anymore. We must rely on external info to detect directories.
-            if (isDirectory) {
-                logger.info("# Removing folder: " + file);
-                foldersRemoved++;
-            } else {
-                logger.info("# Removing file: " + file);
-                filesRemoved++;
-            }
-        }
-    }
-
     // ------------------------------------------------------------------------------------------------- Private Methods
 
     private void syncFile(File file, GridPositioning positioning, SyncStats syncStats) throws Exception {
@@ -112,16 +84,16 @@ public class FolderCanvas extends Topicmap {
             addToTopicmap = !containsTopic(topic.id);
         } else {
             if (file.isDirectory()) {
-                topic = filesPlugin.createFolderTopic(path);
+                topic = filesService.createFolderTopic(path);
             } else {
-                topic = filesPlugin.createFileTopic(path);  // throws Exception
+                topic = filesService.createFileTopic(path);  // throws Exception
             }
             addToTopicmap = true;
         }
         //
         if (addToTopicmap) {
             Point pos = positioning.nextPosition();
-            topicmapsPlugin.addTopicToTopicmap(topic.id, pos.x, pos.y, topicmapId);
+            topicmapsService.addTopicToTopicmap(topic.id, pos.x, pos.y, topicmapId);
             syncStats.countAsAdded(file);
         }
     }

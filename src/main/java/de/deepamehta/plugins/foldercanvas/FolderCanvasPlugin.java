@@ -1,9 +1,13 @@
 package de.deepamehta.plugins.foldercanvas;
 
 import de.deepamehta.plugins.foldercanvas.model.FolderCanvas;
+import de.deepamehta.plugins.foldercanvas.model.SyncStats;
+import de.deepamehta.plugins.files.service.FilesService;
+import de.deepamehta.plugins.topicmaps.service.TopicmapsService;
 
 import de.deepamehta.core.model.ClientContext;
 import de.deepamehta.core.service.Plugin;
+import de.deepamehta.core.service.PluginService;
 
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONException;
@@ -18,15 +22,18 @@ public class FolderCanvasPlugin extends Plugin {
 
     // ---------------------------------------------------------------------------------------------- Instance Variables
 
+    private TopicmapsService topicmapsService;
+    private FilesService filesService;
+
     private Logger logger = Logger.getLogger(getClass().getName());
 
     // -------------------------------------------------------------------------------------------------- Public Methods
 
 
 
-    // ************************
-    // *** Overriding Hooks ***
-    // ************************
+    // **************************************************
+    // *** Core Hooks (called from DeepaMehta 3 Core) ***
+    // **************************************************
 
 
 
@@ -36,8 +43,8 @@ public class FolderCanvasPlugin extends Plugin {
             long topicmapId = -1;
             try {
                 topicmapId = (Integer) params.get("topicmap_id");
-                FolderCanvas folderCanvas = new FolderCanvas(topicmapId, dms);
-                FolderCanvas.SyncStats stats = folderCanvas.synchronize();
+                FolderCanvas folderCanvas = new FolderCanvas(topicmapId, dms, topicmapsService, filesService);
+                SyncStats stats = folderCanvas.synchronize();
                 //
                 JSONObject result = new JSONObject();
                 result.put("status", "success");
@@ -51,5 +58,25 @@ public class FolderCanvasPlugin extends Plugin {
             }
         }
         return null;
+    }
+
+    // ---
+
+    @Override
+    public void serviceArrived(PluginService service) {
+        if (service instanceof TopicmapsService) {
+            topicmapsService = (TopicmapsService) service;
+        } else if (service instanceof FilesService) {
+            filesService = (FilesService) service;
+        }
+    }
+
+    @Override
+    public void serviceGone(PluginService service) {
+        if (service == topicmapsService) {
+            topicmapsService = null;
+        } else if (service == filesService) {
+            filesService = null;
+        }
     }
 }

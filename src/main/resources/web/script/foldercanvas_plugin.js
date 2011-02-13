@@ -108,7 +108,7 @@ function foldercanvas_plugin() {
         dm3c.create_relation("FOLDER_CANVAS", folder_topic_id, topicmap_topic.id)
         // fill topicmap
         dm3c.canvas.start_grid_positioning()
-        dm3c.get_plugin("dm3_files").create_file_topics(dir, true)
+        dm3c.get_plugin("files_plugin").create_file_topics(dir, true)
         dm3c.canvas.stop_grid_positioning()
     }
 }
