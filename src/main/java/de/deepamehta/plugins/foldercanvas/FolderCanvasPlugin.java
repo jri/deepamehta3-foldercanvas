@@ -6,6 +6,8 @@ import de.deepamehta.plugins.files.service.FilesService;
 import de.deepamehta.plugins.topicmaps.service.TopicmapsService;
 
 import de.deepamehta.core.model.ClientContext;
+import de.deepamehta.core.model.CommandParams;
+import de.deepamehta.core.model.CommandResult;
 import de.deepamehta.core.service.Plugin;
 import de.deepamehta.core.service.PluginService;
 
@@ -38,15 +40,15 @@ public class FolderCanvasPlugin extends Plugin {
 
 
     @Override
-    public JSONObject executeCommandHook(String command, Map params, ClientContext clientContext) {
+    public CommandResult executeCommandHook(String command, CommandParams params, ClientContext clientContext) {
         if (command.equals("deepamehta3-foldercanvas.synchronize")) {
             long topicmapId = -1;
             try {
-                topicmapId = (Integer) params.get("topicmap_id");
+                topicmapId = params.getInt("topicmap_id");
                 FolderCanvas folderCanvas = new FolderCanvas(topicmapId, dms, topicmapsService, filesService);
                 SyncStats stats = folderCanvas.synchronize();
                 //
-                JSONObject result = new JSONObject();
+                CommandResult result = new CommandResult();
                 result.put("status", "success");
                 result.put("files_added", stats.filesAdded);
                 result.put("folders_added", stats.foldersAdded);

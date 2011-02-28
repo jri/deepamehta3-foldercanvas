@@ -5,6 +5,7 @@ import de.deepamehta.plugins.topicmaps.model.Topicmap;
 import de.deepamehta.plugins.topicmaps.model.TopicmapTopic;
 import de.deepamehta.plugins.topicmaps.service.TopicmapsService;
 
+import de.deepamehta.core.model.PropValue;
 import de.deepamehta.core.model.RelatedTopic;
 import de.deepamehta.core.model.Relation;
 import de.deepamehta.core.model.Topic;
@@ -50,7 +51,7 @@ public class FolderCanvas extends Topicmap {
 
     public SyncStats synchronize() throws Exception {
         Topic folderTopic = getFolderTopic();
-        String syncPath = (String) dms.getTopicProperty(folderTopic.id, "de/deepamehta/core/property/Path");
+        String syncPath = dms.getTopicProperty(folderTopic.id, "de/deepamehta/core/property/Path").toString();
         //
         logger.info("### Starting synchronization of \"" + syncPath + "\" with topicmap " + topicmapId);
         //
@@ -78,7 +79,7 @@ public class FolderCanvas extends Topicmap {
 
     private void syncFile(File file, GridPositioning positioning, SyncStats syncStats) throws Exception {
         String path = file.getPath();
-        Topic topic = dms.getTopic("de/deepamehta/core/property/Path", path);
+        Topic topic = dms.getTopic("de/deepamehta/core/property/Path", new PropValue(path));
         boolean addToTopicmap;
         if (topic != null) {
             addToTopicmap = !containsTopic(topic.id);
@@ -93,7 +94,7 @@ public class FolderCanvas extends Topicmap {
         //
         if (addToTopicmap) {
             Point pos = positioning.nextPosition();
-            topicmapsService.addTopicToTopicmap(topic.id, pos.x, pos.y, topicmapId);
+            topicmapsService.addTopicToTopicmap(topicmapId, topic.id, pos.x, pos.y);
             syncStats.countAsAdded(file);
         }
     }
@@ -105,7 +106,7 @@ public class FolderCanvas extends Topicmap {
             return;
         }
         //
-        String path = (String) dms.getTopicProperty(topic.id, "de/deepamehta/core/property/Path");
+        String path = dms.getTopicProperty(topic.id, "de/deepamehta/core/property/Path").toString();
         File file = new File(path);
         if (!files.contains(file)) {
             dms.deleteTopic(topic.id);
